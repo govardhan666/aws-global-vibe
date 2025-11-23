@@ -1,0 +1,306 @@
+# Security Policies Configuration for DevSecOps AI Guardian
+version: "1.0"
+
+# Authentication & Authorization
+authentication:
+  policies:
+    - id: require-mfa
+      name: Multi-Factor Authentication Required
+      description: All users must have MFA enabled
+      severity: high
+      enabled: true
+
+    - id: password-complexity
+      name: Strong Password Policy
+      description: Passwords must be 12+ chars with uppercase, lowercase, number, special char
+      severity: medium
+      enabled: true
+      rules:
+        minLength: 12
+        requireUppercase: true
+        requireLowercase: true
+        requireNumbers: true
+        requireSpecialChars: true
+
+    - id: session-timeout
+      name: Session Timeout
+      description: Sessions must timeout after inactivity
+      severity: medium
+      enabled: true
+      timeout: 1800 # 30 minutes
+
+    - id: jwt-expiration
+      name: JWT Token Expiration
+      description: JWT tokens must expire
+      severity: high
+      enabled: true
+      maxAge: 3600 # 1 hour
+
+# Data Protection
+dataProtection:
+  policies:
+    - id: encrypt-at-rest
+      name: Encryption at Rest
+      description: All sensitive data must be encrypted at rest
+      severity: critical
+      enabled: true
+      algorithms: ["AES-256-GCM", "AES-256-CBC"]
+
+    - id: encrypt-in-transit
+      name: Encryption in Transit
+      description: All data transmission must use TLS 1.2+
+      severity: critical
+      enabled: true
+      minTlsVersion: "1.2"
+
+    - id: pii-handling
+      name: PII Data Handling
+      description: PII must be encrypted and access logged
+      severity: high
+      enabled: true
+      piiFields: ["email", "ssn", "phone", "address", "creditCard"]
+
+    - id: data-retention
+      name: Data Retention Policy
+      description: Delete old data per retention policy
+      severity: medium
+      enabled: true
+      retentionDays:
+        logs: 90
+        auditTrails: 365
+        userData: 2555 # 7 years
+
+# Dependency Management
+dependencies:
+  policies:
+    - id: no-critical-cves
+      name: No Critical CVEs
+      description: Block dependencies with critical CVE vulnerabilities
+      severity: critical
+      enabled: true
+      maxSeverity: "critical"
+
+    - id: license-compliance
+      name: License Compliance
+      description: Only allow approved open source licenses
+      severity: medium
+      enabled: true
+      allowedLicenses:
+        - MIT
+        - Apache-2.0
+        - BSD-3-Clause
+        - ISC
+      blockedLicenses:
+        - GPL-3.0
+        - AGPL-3.0
+
+    - id: dependency-age
+      name: Dependency Freshness
+      description: Warn about dependencies not updated in 2+ years
+      severity: low
+      enabled: true
+      maxAgeMonths: 24
+
+# Code Security
+codeSecurity:
+  policies:
+    - id: no-hardcoded-secrets
+      name: No Hardcoded Secrets
+      description: Prevent hardcoded API keys, passwords, tokens
+      severity: critical
+      enabled: true
+      patterns:
+        - apiKey
+        - api_key
+        - password
+        - secret
+        - token
+        - privateKey
+
+    - id: sql-injection-prevention
+      name: SQL Injection Prevention
+      description: Use parameterized queries, not string concatenation
+      severity: critical
+      enabled: true
+
+    - id: xss-prevention
+      name: XSS Prevention
+      description: Sanitize user input, escape output
+      severity: critical
+      enabled: true
+
+    - id: csrf-protection
+      name: CSRF Protection
+      description: Implement CSRF tokens for state-changing operations
+      severity: high
+      enabled: true
+
+    - id: input-validation
+      name: Input Validation
+      description: Validate and sanitize all user inputs
+      severity: high
+      enabled: true
+
+    - id: secure-deserialization
+      name: Secure Deserialization
+      description: Avoid unsafe deserialization of untrusted data
+      severity: critical
+      enabled: true
+
+# Infrastructure Security
+infrastructure:
+  policies:
+    - id: no-public-buckets
+      name: No Public S3 Buckets
+      description: S3 buckets must not be publicly accessible
+      severity: critical
+      enabled: true
+
+    - id: encryption-enabled
+      name: Storage Encryption Enabled
+      description: All storage services must have encryption enabled
+      severity: high
+      enabled: true
+
+    - id: iam-least-privilege
+      name: IAM Least Privilege
+      description: IAM roles should follow principle of least privilege
+      severity: high
+      enabled: true
+
+    - id: security-groups-restrictive
+      name: Restrictive Security Groups
+      description: Security groups should not allow 0.0.0.0/0 on sensitive ports
+      severity: high
+      enabled: true
+      blockedPorts: [22, 3389, 5432, 3306, 27017]
+
+    - id: enable-logging
+      name: Enable CloudTrail Logging
+      description: CloudTrail must be enabled for all regions
+      severity: high
+      enabled: true
+
+# API Security
+apiSecurity:
+  policies:
+    - id: rate-limiting
+      name: API Rate Limiting
+      description: All APIs must have rate limiting enabled
+      severity: high
+      enabled: true
+      defaultLimit: 100
+      defaultWindow: 60000 # 1 minute
+
+    - id: authentication-required
+      name: API Authentication Required
+      description: All API endpoints except health checks must require authentication
+      severity: critical
+      enabled: true
+      exceptions: ["/health", "/metrics"]
+
+    - id: cors-configured
+      name: CORS Properly Configured
+      description: CORS must be restrictive, not allow *
+      severity: medium
+      enabled: true
+
+    - id: api-versioning
+      name: API Versioning
+      description: APIs should be versioned
+      severity: low
+      enabled: true
+
+# Compliance Standards
+compliance:
+  soc2:
+    enabled: true
+    controls:
+      - CC6.1 # Access controls
+      - CC6.2 # Encryption
+      - CC6.3 # Audit logging
+      - CC7.2 # System monitoring
+
+  gdpr:
+    enabled: true
+    requirements:
+      - right-to-deletion
+      - data-portability
+      - consent-management
+      - data-breach-notification
+
+  hipaa:
+    enabled: false # Enable if handling healthcare data
+    requirements:
+      - phi-encryption
+      - access-controls
+      - audit-trails
+      - breach-notification
+
+  pci-dss:
+    enabled: false # Enable if handling credit card data
+    requirements:
+      - cardholder-data-protection
+      - vulnerability-management
+      - access-control
+      - network-security
+
+# Custom Rules
+customRules:
+  - id: no-console-log-production
+    name: No console.log in Production
+    description: Remove console.log statements from production code
+    severity: low
+    enabled: true
+    pattern: "console\\.log"
+    excludePaths: ["tests/", "scripts/"]
+
+  - id: require-error-handling
+    name: Require Error Handling
+    description: All async functions must have try-catch or .catch()
+    severity: medium
+    enabled: true
+
+  - id: max-function-complexity
+    name: Maximum Function Complexity
+    description: Functions should not exceed cyclomatic complexity of 10
+    severity: low
+    enabled: true
+    maxComplexity: 10
+
+  - id: require-tests
+    name: Require Unit Tests
+    description: All services and utils must have corresponding tests
+    severity: medium
+    enabled: true
+    minCoverage: 80
+
+# Notification Settings
+notifications:
+  critical:
+    slack: true
+    email: true
+    pagerDuty: false
+
+  high:
+    slack: true
+    email: true
+
+  medium:
+    slack: true
+    email: false
+
+  low:
+    slack: false
+    email: false
+
+# Auto-Fix Settings
+autoFix:
+  enabled: true
+  requireApproval: true
+  categories:
+    - hardcoded-secrets # Auto-move to env vars
+    - missing-input-validation # Add validation
+    - sql-injection # Convert to parameterized queries
+    - xss # Add sanitization
+  maxChangesPerFix: 50 # Don't auto-fix if >50 changes needed
