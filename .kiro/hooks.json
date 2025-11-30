@@ -1,0 +1,130 @@
+{
+  "version": "1.0",
+  "description": "Kiro agent hooks configuration for DevSecOps AI Guardian",
+  "hooks": {
+    "onSave": {
+      "enabled": true,
+      "description": "Triggered when files are saved",
+      "agents": [
+        {
+          "name": "security-quick-scan",
+          "prompt": "Quickly scan the saved file for obvious security vulnerabilities like hardcoded secrets, SQL injection patterns, or XSS issues. Report findings with severity.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 10000
+        },
+        {
+          "name": "doc-updater",
+          "prompt": "Check if the saved file requires documentation updates. If it's a public function/class/API, ensure JSDoc/docstring is present and accurate.",
+          "model": "claude-sonnet-3-7",
+          "timeout": 5000
+        }
+      ]
+    },
+    "onCommit": {
+      "enabled": true,
+      "description": "Triggered before git commit",
+      "agents": [
+        {
+          "name": "full-security-analysis",
+          "prompt": "Perform comprehensive security analysis on all changed files. Check for OWASP Top 10 vulnerabilities, insecure dependencies, and compliance issues. Generate detailed report.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 60000
+        },
+        {
+          "name": "code-quality-review",
+          "prompt": "Analyze code quality of changed files: complexity, maintainability, performance patterns, best practices. Suggest improvements.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 30000
+        },
+        {
+          "name": "test-generator",
+          "prompt": "Review changed code and generate appropriate unit tests if they're missing. Focus on edge cases and error handling.",
+          "model": "claude-sonnet-3-7",
+          "timeout": 45000
+        },
+        {
+          "name": "architecture-diagram-update",
+          "prompt": "Update architecture diagrams if system structure changed. Identify new components, connections, or removed elements.",
+          "model": "claude-sonnet-3-7",
+          "timeout": 20000
+        }
+      ]
+    },
+    "onPR": {
+      "enabled": true,
+      "description": "Triggered when pull request is created or updated",
+      "agents": [
+        {
+          "name": "comprehensive-code-review",
+          "prompt": "Act as senior engineer reviewing PR. Check: architecture, performance, security, maintainability, test coverage. Provide constructive feedback.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 120000
+        },
+        {
+          "name": "security-audit",
+          "prompt": "Deep security audit of PR changes. Check OWASP Top 10, dependency vulnerabilities, secrets, authentication/authorization, data validation.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 90000
+        },
+        {
+          "name": "compliance-checker",
+          "prompt": "Verify PR compliance with SOC2, GDPR, HIPAA requirements. Check data handling, encryption, audit logging, access controls.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 60000
+        },
+        {
+          "name": "ai-fix-generator",
+          "prompt": "For each issue found, generate specific, actionable code fixes that can be applied automatically. Provide before/after comparison.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 60000
+        }
+      ]
+    },
+    "onDeploy": {
+      "enabled": true,
+      "description": "Triggered before deployment",
+      "agents": [
+        {
+          "name": "deployment-verification",
+          "prompt": "Verify deployment configuration: environment variables, secrets management, resource limits, health checks, rollback strategy.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 30000
+        },
+        {
+          "name": "infrastructure-security",
+          "prompt": "Audit infrastructure code (Terraform/CloudFormation) for security: public access, encryption, IAM policies, network configuration.",
+          "model": "claude-sonnet-4-5",
+          "timeout": 45000
+        },
+        {
+          "name": "cost-optimization",
+          "prompt": "Analyze AWS resource configuration for cost optimization opportunities. Suggest right-sizing, reserved instances, or architectural changes.",
+          "model": "claude-sonnet-3-7",
+          "timeout": 30000
+        }
+      ]
+    }
+  },
+  "globalSettings": {
+    "parallel": true,
+    "continueOnError": true,
+    "notifyOnCompletion": true,
+    "cacheResults": true,
+    "cacheTTL": 3600
+  },
+  "notifications": {
+    "slack": {
+      "enabled": false,
+      "webhookUrl": "${SLACK_WEBHOOK_URL}",
+      "channels": {
+        "security": "#security-alerts",
+        "quality": "#code-quality",
+        "deployment": "#deployments"
+      }
+    },
+    "email": {
+      "enabled": false,
+      "recipients": ["team@example.com"]
+    }
+  }
+}
